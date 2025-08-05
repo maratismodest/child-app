@@ -10,16 +10,20 @@ interface Position {
 }
 
 const colors: string[] = [
-    '#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00',
-    '#FF00FF', '#00FFFF', '#FFA500', '#800080', '#FFC0CB',
-    '#A52A2A', '#808080', '#000080', '#008000', '#FF69B4', '#87CEEB'
+    '#000000', '#FF0000',
+    '#00FF00', '#0000FF',
+    '#FFFF00', '#FF00FF',
+    '#00FFFF', '#FFA500',
+    // '#800080',
+    // '#FFC0CB',
+    // '#A52A2A', '#808080', '#000080', '#008000', '#FF69B4', '#87CEEB'
 ];
 
 export default function WhiteboardApp() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isDrawing, setIsDrawing] = useState<boolean>(false);
     const [tool, setTool] = useState<Tool>('brush');
-    const [brushSize, setBrushSize] = useState<number>(5);
+    const [brushSize, setBrushSize] = useState<number>(2);
     const [color, setColor] = useState<string>('#000000');
     const [startPos, setStartPos] = useState<Position>({x: 0, y: 0});
     const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
@@ -40,7 +44,7 @@ export default function WhiteboardApp() {
         ctx.lineJoin = 'round';
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }, []);
+    }, [isCollapsed]);
 
     const getMousePos = (e: React.MouseEvent<HTMLCanvasElement>): Position => {
         const canvas = canvasRef.current;
@@ -191,30 +195,6 @@ export default function WhiteboardApp() {
                             }`}
                         >
                             <Eraser size={20}/>
-                        </button>
-                        <button
-                            onClick={() => setTool('rectangle')}
-                            className={`p-2 rounded-md transition-colors ${
-                                tool === 'rectangle' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'
-                            }`}
-                        >
-                            <Square size={20}/>
-                        </button>
-                        <button
-                            onClick={() => setTool('circle')}
-                            className={`p-2 rounded-md transition-colors ${
-                                tool === 'circle' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'
-                            }`}
-                        >
-                            <Circle size={20}/>
-                        </button>
-                        <button
-                            onClick={() => setTool('line')}
-                            className={`p-2 rounded-md transition-colors ${
-                                tool === 'line' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'
-                            }`}
-                        >
-                            <Minus size={20}/>
                         </button>
                     </div>
 
