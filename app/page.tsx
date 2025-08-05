@@ -1,103 +1,298 @@
-import Image from "next/image";
+'use client';
+import React, {useRef, useState, useEffect} from 'react';
+import {Brush, Eraser, Square, Circle, Minus, RotateCcw, Download, Palette} from 'lucide-react';
 
-export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+type Tool = 'brush' | 'eraser' | 'rectangle' | 'circle' | 'line';
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+interface Position {
+    x: number;
+    y: number;
+}
+
+const colors: string[] = [
+    '#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00',
+    '#FF00FF', '#00FFFF', '#FFA500', '#800080', '#FFC0CB',
+    '#A52A2A', '#808080', '#000080', '#008000', '#FF69B4', '#87CEEB'
+];
+
+export default function WhiteboardApp() {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [isDrawing, setIsDrawing] = useState<boolean>(false);
+    const [tool, setTool] = useState<Tool>('brush');
+    const [brushSize, setBrushSize] = useState<number>(5);
+    const [color, setColor] = useState<string>('#000000');
+    const [startPos, setStartPos] = useState<Position>({x: 0, y: 0});
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Set canvas size
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+
+        // Set default styles
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }, []);
+
+    const getMousePos = (e: React.MouseEvent<HTMLCanvasElement>): Position => {
+        const canvas = canvasRef.current;
+        if (!canvas) return {x: 0, y: 0};
+
+        const rect = canvas.getBoundingClientRect();
+        return {
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top
+        };
+    };
+
+    const getTouchPos = (e: React.TouchEvent<HTMLCanvasElement>): Position => {
+        const canvas = canvasRef.current;
+        if (!canvas) return {x: 0, y: 0};
+
+        const rect = canvas.getBoundingClientRect();
+        return {
+            x: e.touches[0].clientX - rect.left,
+            y: e.touches[0].clientY - rect.top
+        };
+    };
+
+    const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>): void => {
+        e.preventDefault();
+        setIsDrawing(true);
+        const pos = e.type.includes('touch')
+            ? getTouchPos(e as React.TouchEvent<HTMLCanvasElement>)
+            : getMousePos(e as React.MouseEvent<HTMLCanvasElement>);
+        setStartPos(pos);
+
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        if (tool === 'brush') {
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        }
+    };
+
+    const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>): void => {
+        e.preventDefault();
+        if (!isDrawing) return;
+
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const pos = e.type.includes('touch')
+            ? getTouchPos(e as React.TouchEvent<HTMLCanvasElement>)
+            : getMousePos(e as React.MouseEvent<HTMLCanvasElement>);
+
+        ctx.globalCompositeOperation = tool === 'eraser' ? 'destination-out' : 'source-over';
+        ctx.strokeStyle = color;
+        ctx.lineWidth = brushSize;
+
+        if (tool === 'brush' || tool === 'eraser') {
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+        }
+    };
+
+    const stopDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>): void => {
+        e.preventDefault();
+        if (!isDrawing) return;
+        setIsDrawing(false);
+
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const pos = e.type.includes('touch')
+            ? getTouchPos(e as React.TouchEvent<HTMLCanvasElement>)
+            : getMousePos(e as React.MouseEvent<HTMLCanvasElement>);
+
+        if (tool === 'rectangle') {
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.strokeStyle = color;
+            ctx.lineWidth = brushSize;
+            ctx.strokeRect(startPos.x, startPos.y, pos.x - startPos.x, pos.y - startPos.y);
+        } else if (tool === 'circle') {
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.strokeStyle = color;
+            ctx.lineWidth = brushSize;
+            const radius = Math.sqrt(Math.pow(pos.x - startPos.x, 2) + Math.pow(pos.y - startPos.y, 2));
+            ctx.beginPath();
+            ctx.arc(startPos.x, startPos.y, radius, 0, 2 * Math.PI);
+            ctx.stroke();
+        } else if (tool === 'line') {
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.strokeStyle = color;
+            ctx.lineWidth = brushSize;
+            ctx.beginPath();
+            ctx.moveTo(startPos.x, startPos.y);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+        }
+    };
+
+    const clearCanvas = (): void => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    };
+
+    const downloadCanvas = (): void => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const link = document.createElement('a');
+        link.download = 'whiteboard-drawing.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    };
+
+    return (
+        <div className="min-h-screen bg-gray-100 flex flex-col">
+            {/* Header */}
+            <div className="bg-white shadow-lg p-4 border-b">
+                <h1 className="text-2xl font-bold text-gray-800 mb-4 text-center">Next.js Whiteboard</h1>
+
+                {/* Toolbar */}
+                <div className="flex flex-wrap items-center justify-center gap-4">
+                    {/* Drawing Tools */}
+                    <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg">
+                        <button
+                            onClick={() => setTool('brush')}
+                            className={`p-2 rounded-md transition-colors ${
+                                tool === 'brush' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'
+                            }`}
+                        >
+                            <Brush size={20}/>
+                        </button>
+                        <button
+                            onClick={() => setTool('eraser')}
+                            className={`p-2 rounded-md transition-colors ${
+                                tool === 'eraser' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'
+                            }`}
+                        >
+                            <Eraser size={20}/>
+                        </button>
+                        <button
+                            onClick={() => setTool('rectangle')}
+                            className={`p-2 rounded-md transition-colors ${
+                                tool === 'rectangle' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'
+                            }`}
+                        >
+                            <Square size={20}/>
+                        </button>
+                        <button
+                            onClick={() => setTool('circle')}
+                            className={`p-2 rounded-md transition-colors ${
+                                tool === 'circle' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'
+                            }`}
+                        >
+                            <Circle size={20}/>
+                        </button>
+                        <button
+                            onClick={() => setTool('line')}
+                            className={`p-2 rounded-md transition-colors ${
+                                tool === 'line' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'
+                            }`}
+                        >
+                            <Minus size={20}/>
+                        </button>
+                    </div>
+
+                    {/* Brush Size */}
+                    <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg">
+                        <span className="text-sm text-gray-600">Size:</span>
+                        <input
+                            type="range"
+                            min="1"
+                            max="50"
+                            value={brushSize}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setBrushSize(Number(e.target.value))}
+                            className="w-20"
+                        />
+                        <span className="text-sm text-gray-600 w-8">{brushSize}</span>
+                    </div>
+
+                    {/* Color Picker */}
+                    <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg">
+                        <Palette size={20} className="text-gray-600"/>
+                        <input
+                            type="color"
+                            value={color}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setColor(e.target.value)}
+                            className="w-8 h-8 border-none rounded cursor-pointer"
+                        />
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg">
+                        <button
+                            onClick={clearCanvas}
+                            className="p-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                        >
+                            <RotateCcw size={20}/>
+                        </button>
+                        <button
+                            onClick={downloadCanvas}
+                            className="p-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+                        >
+                            <Download size={20}/>
+                        </button>
+                    </div>
+                </div>
+
+                {/* Color Palette */}
+                <div className="flex flex-wrap justify-center gap-2 mt-4">
+                    {colors.map((c: string) => (
+                        <button
+                            key={c}
+                            onClick={() => setColor(c)}
+                            className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110 ${
+                                color === c ? 'border-gray-800 scale-110' : 'border-gray-300'
+                            }`}
+                            style={{backgroundColor: c}}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            {/* Canvas */}
+            <div className="flex-1 p-4">
+                <div className="bg-white rounded-lg shadow-lg h-full">
+                    <canvas
+                        ref={canvasRef}
+                        className="w-full h-full cursor-crosshair rounded-lg"
+                        onMouseDown={startDrawing}
+                        onMouseMove={draw}
+                        onMouseUp={stopDrawing}
+                        onMouseLeave={stopDrawing}
+                        onTouchStart={startDrawing}
+                        onTouchMove={draw}
+                        onTouchEnd={stopDrawing}
+                        style={{touchAction: 'none'}}
+                    />
+                </div>
+            </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+    );
 }
