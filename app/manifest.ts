@@ -2,9 +2,9 @@ import type {MetadataRoute} from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
     return {
-        name: 'Next.js PWA',
-        short_name: 'NextPWA',
-        description: 'A Progressive Web App built with Next.js',
+        name: 'Paint for Iasmin',
+        short_name: 'Paint for Iasmin',
+        description: 'Paint for Iasmin',
         start_url: '/',
         display: 'standalone',
         background_color: '#ffffff',

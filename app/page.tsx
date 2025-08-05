@@ -1,6 +1,6 @@
 'use client';
 import React, {useRef, useState, useEffect} from 'react';
-import {Brush, Eraser, Square, Circle, Minus, RotateCcw, Download, Palette} from 'lucide-react';
+import {Brush, Eraser, Square, Circle, Minus, RotateCcw, Download, Palette, ArrowUpDown} from 'lucide-react';
 
 type Tool = 'brush' | 'eraser' | 'rectangle' | 'circle' | 'line';
 
@@ -22,6 +22,7 @@ export default function WhiteboardApp() {
     const [brushSize, setBrushSize] = useState<number>(5);
     const [color, setColor] = useState<string>('#000000');
     const [startPos, setStartPos] = useState<Position>({x: 0, y: 0});
+    const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -39,7 +40,7 @@ export default function WhiteboardApp() {
         ctx.lineJoin = 'round';
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }, []);
+    }, [isCollapsed]);
 
     const getMousePos = (e: React.MouseEvent<HTMLCanvasElement>): Position => {
         const canvas = canvasRef.current;
@@ -170,11 +171,11 @@ export default function WhiteboardApp() {
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col">
             {/* Header */}
-            <div className="bg-white shadow-lg p-4 border-b">
+            <header className="bg-white shadow-lg px-4 py-2 border-b">
                 {/* Toolbar */}
                 <div className="flex flex-wrap items-center justify-center gap-4">
                     {/* Drawing Tools */}
-                    <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg">
+                    <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg" hidden={isCollapsed}>
                         <button
                             onClick={() => setTool('brush')}
                             className={`p-2 rounded-md transition-colors ${
@@ -218,7 +219,7 @@ export default function WhiteboardApp() {
                     </div>
 
                     {/* Brush Size */}
-                    <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg">
+                    <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg" hidden={isCollapsed}>
                         <span className="text-sm text-gray-600">Size:</span>
                         <input
                             type="range"
@@ -244,6 +245,11 @@ export default function WhiteboardApp() {
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg">
+                        <button onClick={() => setIsCollapsed(prevState => !prevState)}
+                                className="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                        >
+                            <ArrowUpDown size={20}/>
+                        </button>
                         <button
                             onClick={clearCanvas}
                             className="p-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
@@ -260,7 +266,7 @@ export default function WhiteboardApp() {
                 </div>
 
                 {/* Color Palette */}
-                <div className="flex flex-wrap justify-center gap-2 mt-4">
+                <div className="flex flex-wrap justify-center gap-2 mt-4" hidden={isCollapsed}>
                     {colors.map((c: string) => (
                         <button
                             key={c}
@@ -272,10 +278,10 @@ export default function WhiteboardApp() {
                         />
                     ))}
                 </div>
-            </div>
+            </header>
 
             {/* Canvas */}
-            <div className="flex-1 p-4">
+            <main className="flex-1 p-4">
                 <div className="bg-white rounded-lg shadow-lg h-full">
                     <canvas
                         ref={canvasRef}
@@ -290,7 +296,7 @@ export default function WhiteboardApp() {
                         style={{touchAction: 'none'}}
                     />
                 </div>
-            </div>
+            </main>
         </div>
     );
 }
