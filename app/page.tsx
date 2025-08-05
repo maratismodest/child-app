@@ -32,7 +32,7 @@ export default function WhiteboardApp() {
 
         // Set canvas size
         canvas.width = canvas.offsetWidth;
-        canvas.height = canvas.offsetHeight;
+        canvas.height = canvas.parentElement!.parentElement!.offsetHeight - 32; // Adjust height based on parent container
 
         // Set default styles
         ctx.lineCap = 'round';
@@ -171,8 +171,6 @@ export default function WhiteboardApp() {
         <div className="min-h-screen bg-gray-100 flex flex-col">
             {/* Header */}
             <div className="bg-white shadow-lg p-4 border-b">
-                <h1 className="text-2xl font-bold text-gray-800 mb-4 text-center">Next.js Whiteboard</h1>
-
                 {/* Toolbar */}
                 <div className="flex flex-wrap items-center justify-center gap-4">
                     {/* Drawing Tools */}
