@@ -40,7 +40,7 @@ export default function WhiteboardApp() {
         ctx.lineJoin = 'round';
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }, [isCollapsed]);
+    }, []);
 
     const getMousePos = (e: React.MouseEvent<HTMLCanvasElement>): Position => {
         const canvas = canvasRef.current;
