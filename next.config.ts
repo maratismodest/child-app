@@ -1,14 +1,10 @@
 import withSerwistInit from "@serwist/next";
 import type {NextConfig} from "next";
 
-const revision = crypto.randomUUID();
 
 const withSerwist = withSerwistInit({
-    cacheOnNavigation: true,
     swSrc: "app/sw.ts",
-    swDest: "public/sw.js",
-    additionalPrecacheEntries: [{url: "/~offline", revision}],
-});
+    swDest: "public/sw.js"});
 
 const nextConfig: NextConfig = {}
 
